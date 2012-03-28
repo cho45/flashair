@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<script type="text/javascript" src="lib.js"></script>
+	</head>
+	<body>
+		<header>
+		</header>
+		<div id="list">
+			<script type="text/html" id="listTmpl">
+				<a class="file <%= obj.ext %>" href="<%= obj.path %>">
+					<!--
+					<%= [obj.date.getFullYear(), obj.date.getMonth() + 1, obj.date.getDate()].join('/') %>
+					<%= [obj.date.getHours(), obj.date.getMinutes(), obj.date.getSeconds()].join(':') %>
+					-->
+					<% if (obj.ext == 'JPG') { %>
+					<img src="http://flashair/thumbnail.cgi?<%= obj.path %>" class="thumbnail"/>
+					<% } else { %>
+					<span class="filename"><%= obj.filename %></span>
+					<% } %>
+				</a>
+			</script>
+		</div>
+
+		<style>
+			html, body {
+				margin: 0;
+				padding: 0;
+				background: #fff;
+				color: #333;
+			}
+
+			header {
+				padding: 10px;
+				background: #f1f1f1;
+				border-width: 0 0 1px 0;
+				border-style: solid;
+				border-color: #d8d8d8;
+			}
+
+			#list {
+				padding: 10px;
+			}
+
+			a:link ,
+			a:visited {
+				color: #333;
+				text-decoration: none;
+			}
+
+			.file {
+				display: inline-block;
+				width: 100px;
+				height: 100px;
+				margin: 0px;
+				border: 1px solid #ccc;
+				margin: 0 5px 5px 0;
+				padding: 0;
+				float: left;
+			}
+
+			.file.jpg {
+				border: 1px solid #fff;
+			}
+
+			.file .filename ,
+			.file .thumbnail {
+				max-width: 100%;
+				min-width: 100%;
+				max-height: 100%;
+				min-height: 100%;
+				line-height: 100px;
+				text-align: center;
+				vertical-align: middle;
+				margin: 0;
+				padding: 0;
+			}
+
+			.file .filename {
+				display: inline-block;
+			}
+		</style>
+
+		<script type="text/javascript">
+wlansd = new Array();
+wlansd[0]="/DCIM/101SIGMA,SDIM0180.X3F,10839100,0,14881,113";
+wlansd[1]="/DCIM/101SIGMA,SDIM0181.X3F,14438748,0,14881,2532";
+wlansd[2]="/DCIM/101SIGMA,SDIM0182.X3F,10685700,0,14881,2571";
+wlansd[3]="/DCIM/101SIGMA,SDIM0183.JPG,2257925,0,14881,2660";
+wlansd[4]="/DCIM/101SIGMA,SDIM0184.JPG,2589612,0,14881,2688";
+wlansd[5]="/DCIM/101SIGMA,SDIM0185.JPG,1408345,0,14881,2906";
+wlansd[6]="/DCIM/101SIGMA,SDIM0186.JPG,400329,0,14881,3000";
+		</script>
+
+		<script>
+			Deferred.define();
+
+			var FlashAir = {};
+			FlashAir.API = {
+				getFiles : function (path) {
+					console.log(['getFiles', path]);
+					var d = new Deferred();
+					$.ajax({
+						url: path,
+						type : "GET",
+						dataType: 'text',
+						success : function (data, status, xhr) {
+							var js = data.match(/wlansd\[\d+\]=.+/g);
+							var files = new Function("wlansd", js.join("\n") + "return wlansd")([]);
+							for (var i = 0, it; (it = files[i]); i++) files[i] = new FlashAir.File(it);
+							d.call(files);
+						},
+						error : function (jqXHR, status, error) {
+							d.fail([jqXHR, status, error]);
+						}
+					});
+					return d;
+				},
+
+				getRecent : function (start, end) {
+					end = end || start + 1;
+
+					if (!arguments.callee.cache) arguments.callee.cache = { directories: null, files : [] };
+					var cache = arguments.callee.cache;
+					console.log(cache);
+
+					return next(function () {
+						if (!cache.directories) {
+							return FlashAir.API.getFiles('/DCIM').next(function (files) {
+								files.sort(function (a, b) { return a.date.getTime() - b.date.getTime() });
+								var directories = [];
+								for (var i = 0, it; (it = files[i]); i++) {
+									if (it.isDCFDirectory) directories.push(it);
+								}
+								cache.directories = directories;
+								return directories;
+							});
+						} else {
+							return cache.directories;
+						}
+					}).
+					next(function (directories) {
+						var enough   = !!cache.files[end-1];
+						var finished = !directories.length;
+						if (enough || finished) return cache.files.slice(start, end);
+
+						var directory = directories.pop();
+						return FlashAir.API.getFiles(directory.path).next(function (files) {
+							files.sort(function (a, b) { return b.date.getTime() - a.date.getTime() });
+							cache.files = cache.files.concat(files);
+							return FlashAir.API.getRecent(start, end);
+						});
+					});
+				}
+			};
+
+			FlashAir.File = function () { this.init.apply(this, arguments) };
+			FlashAir.File.prototype = {
+				init : function (data) {
+					data = data.split(/,/);
+					this.directory = data[0];
+					this.filename  = data[1];
+					this.path      = this.directory + '/' + this.filename;
+					this.ext       = (this.filename.split(/\./)[1] || '').toUpperCase();
+					this.size      = +data[2];
+					this.number    = +data[3];
+
+					var d = +data[4], t = +data[5];
+					this.date = new Date(
+						((d & 0xfe00) >> 9) + 1980,
+						((d & 0x1e0) >> 5) + 1,
+						d & 0x1f,
+						((t & 0xfe00) >> 9),
+						((t & 0x1e0) >> 5),
+						t & 0x1f
+					);
+
+					this.isDCFDirectory = new RegExp('^/DCIM/[0-9]{3}[A-Z]+$').test(this.path);
+					this.isDCFBasicFile = new RegExp('^/DCIM/[0-9]{3}[A-Z_]+/[A-Z_]{4}[0-9]{4}.JPG$').test(this.path);
+				}
+			};
+
+			var list = $('#list');
+			var start = 0;
+			next(function () {
+				console.log(['getRecent', start, start + 1]);
+				// thumbnail.cgi は同時アクセスすると刺さる
+				return FlashAir.API.getRecent(start, start + 1).
+					next(function (files) {
+						start = start + files.length;
+						if (!files.length) throw "done";
+						var box = $(window.tmpl('listTmpl')(files[0]));
+						list.append(box);
+						var d = new Deferred();
+						box.find('img').load(function () {
+							d.call();
+						});
+						return d;
+					}).
+					next(function () {
+						var loadNext;
+						if (start < 32) {
+							loadNext = wait(0.1);
+						} else {
+							// scroll event...
+							loadNext = new Deferred();
+							$(window).scroll(function () {
+								var rest = $(document).height() - $(window).scrollTop();
+								if (rest < $(window).height()) {
+									$(window).unbind('scroll', arguments.callee);
+									loadNext.call();
+								}
+							});
+						}
+						return loadNext;
+					}).
+					next(arguments.callee);
+			}).
+			error(function (e) {
+				if (e == 'done') return;
+				alert(e);
+			});
+
+			// Simple JavaScript Templating
+			// John Resig - http://ejohn.org/ - MIT Licensed
+			function tmpl (str, data) {
+				tmpl.cache = {};
+
+				// Figure out if we're getting a template, or if we need to
+				// load the template - and be sure to cache the result.
+				var fn = /^[\w\-]+$/.test(str) ? tmpl.cache[str] = tmpl.cache[str] || tmpl(document.getElementById(str).innerHTML) :
+					// Generate a reusable function that will serve as a template
+					// generator (and which will be cached).
+					new Function("obj",
+					"var p=[],print=function(){p.push.apply(p,arguments);};" +
+
+					// Introduce the data as local variables using with(){}
+					"with(obj){p.push('" +
+
+					// Convert the template into pure JavaScript
+					str
+						.replace(/[\r\t\n]/g, " ")
+						.split("<%").join("\t")
+						.replace(/((^|%>)[^\t]*)'/g, "$1\r")
+						.replace(/\t=(.*?)%>/g, "',String($1).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&#34;').replace(/\'/g,'&#39;'),'")
+						.split("\t").join("');")
+						.split("%>").join("p.push('")
+						.split("\r").join("\\'") +
+
+					"');}return p.join('');");
+
+				// Provide some basic currying to the user
+				return data ? fn( data ) : fn;
+			}
+		</script>
+	</body>
+	<!--
+	最近の画像を表示
+	-->
+</html>
