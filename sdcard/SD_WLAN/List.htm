@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="Shift_JIS"/>
+		<title>List</title>
+	</head>
+	<body>
+		<script type="text/javascript">
+			wlansd = new Array();
+			<!--WLANSDJLST-->
+
+			for (var i = 0, it; (it = wlansd[i]); i++) {
+				var d = it.split(/,/);
+				var a = document.createElement('a');
+				a.href = d[0] + '/' + d[1];
+				a.appendChild(document.createTextNode(d[1]));
+				document.body.appendChild(a);
+			}
+		</script>
+		<style>
+			html, body {
+			padding: 0;
+			margin: 0;
+			}
+
+			a {
+			display: block;
+			padding: 10px;
+			}
+
+			a:nth-child(odd) {
+			background: #f1f1f1;
+			}
+		</style>
+	</body>
+</html>
