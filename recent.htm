@@ -260,7 +260,7 @@
 								canvas.setAttribute('height', size);
 
 								var ctx = canvas.getContext('2d');
-								var source = Math.min(img.height, img.width) * 0.7;
+								var source = Math.min(img.height, img.width) * 0.9;
 								ctx.drawImage(img,
 									(img.width  - source) / 2,
 									(img.height - source) / 2,
@@ -358,7 +358,7 @@
 				return FlashAir.API.getRecent(start, start + limit).
 					next(function (files) {
 						if (!files.length) throw "done";
-						start = start + files.length; if (limit < 32) limit = limit * 2 + limit;
+						start = start + files.length; if (limit < 9) limit = limit * 2 + limit;
 
 						for (var i = 0, it; (it = files[i]); i++) {
 							var box = $(window.tmpl('listTmpl')(it));
@@ -368,14 +368,14 @@
 					}).
 					next(function () {
 						var loadNext;
-						if ($(document).height() <= $(window).height() * 1.5) {
+						if ($(document).height() <= $(window).height() + 150) {
 							loadNext = next();
 						} else {
 							// scroll event...
 							loadNext = new Deferred();
 							$(window).scroll(function () {
 								var rest = $(document).height() - $(window).scrollTop();
-								if (rest < $(window).height() * 1.5) {
+								if (rest < $(window).height() + 150) {
 									$(window).unbind('scroll', arguments.callee);
 									loadNext.call();
 								}
