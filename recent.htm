@@ -253,32 +253,55 @@
 					if (!cache) {
 						console.log(['create thumbnail', path]);
 
-						var img = new Image();
-						img.onload = function () {
-							try {
-								var canvas = document.createElement('canvas');
-								canvas.setAttribute('width', size);
-								canvas.setAttribute('height', size);
+						if (!arguments.callee.queue) arguments.callee.queue = [];
+						var queue = arguments.callee.queue;
+						queue.push({ path : path, size : size, deferred : d });
 
-								var ctx = canvas.getContext('2d');
-								var source = Math.min(img.height, img.width) * 0.9;
-								ctx.drawImage(img,
-									(img.width  - source) / 2,
-									(img.height - source) / 2,
-									source,
-									source,
-									0,
-									0,
-									size,
-									size
-								);
-								var url = canvas.toDataURL('image/jpeg', 0.8);
-								console.log(['cached thumbnail/size:', url.length ]);
-								lscache.set('thumbnail:' + path, url);
-								d.call(url);
-							} catch (e) { d.fail(e) }
-						};
-						img.src = '/thumbnail.cgi?' + path;
+						if (!queue.worker) {
+							queue.worker = next(function () {
+								return next(function () {
+									var job  = queue.shift();
+									if (!job) return delete queue.worker;
+									var path = job.path;
+									var size = job.size;
+									var ret  = new Deferred();
+
+									var img = new Image();
+									img.onload = function () {
+										try {
+											var canvas = document.createElement('canvas');
+											canvas.setAttribute('width', size);
+											canvas.setAttribute('height', size);
+
+											var ctx = canvas.getContext('2d');
+											var source = Math.min(img.height, img.width) * 0.9;
+											ctx.drawImage(img,
+												(img.width  - source) / 2,
+												(img.height - source) / 2,
+												source,
+												source,
+												0,
+												0,
+												size,
+												size
+											);
+											var url = canvas.toDataURL('image/jpeg', 0.8);
+											console.log(['cached thumbnail/size:', url.length ]);
+											lscache.set('thumbnail:' + path, url);
+											job.deferred.call(url);
+										} catch (e) { job.deferred.fail(e) }
+										ret.call();
+									};
+									img.src = '/thumbnail.cgi?' + path;
+
+									return ret;
+								}).
+								next(arguments.callee);
+							}).
+							error(function (e) {
+								alert(e);
+							});
+						}
 					} else {
 						console.log(['cached thumbnail:', path]);
 						next(function () { d.call(cache) });
@@ -320,34 +343,13 @@
 			// Recent Photo
 
 			function loadThumbnailImage (parent) {
-				if (!loadThumbnailImage.queue) loadThumbnailImage.queue = [];
-				var queue = loadThumbnailImage.queue;
-
 				parent.find('img.thumbnail[data-path]').each(function () {
-					load(this);
+					var target = this;
+					var path = target.getAttribute('data-path');
+					return FlashAir.API.getThumbnailURL(path, 100).next(function (url) {
+						target.src = url;
+					});
 				});
-
-				function load (target) {
-					queue.push(target);
-					if (!queue.worker) {
-						queue.worker = next(function work () {
-							var target = queue.shift();
-							var path   = target.getAttribute('data-path');
-							return FlashAir.API.getThumbnailURL(path, 100).next(function (url) {
-								target.src = url;
-
-								if (queue.length) {
-									return next(work);
-								} else {
-									delete queue.worker;
-								}
-							});
-						}).
-						error(function (e) {
-							alert(e);
-						});
-					}
-				}
 			}
 
 			if (location.hash == '#nocache') lscache.flush();
