@@ -281,7 +281,7 @@
 						img.src = '/thumbnail.cgi?' + path;
 					} else {
 						console.log(['cached thumbnail:', path]);
-						setTimeout(function () { d.call(cache) }, 10);
+						next(function () { d.call(cache) });
 					}
 
 					return d;
