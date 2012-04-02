@@ -45,9 +45,9 @@ my $CGI = {
 				",SD_WLAN,0,18,16508,2660"
 			},
 			# Unknown
-			101 => sub { 2 },
+			101 => sub { '2' },
 			# Unknown
-			102 => sub { 1 },
+			102 => sub { '1' },
 			# Unknown
 			103 => sub { '1607beb4bb14c1a20388020019dd5b' },
 			# SSID
@@ -62,14 +62,14 @@ my $CGI = {
 			108 => sub { 'F24A6W3AW1.00.01' },
 		}->{$op};
 
-		[ 400, [ 'Content-Type' => 'text/plain' ], [ $ret->() ] ];
+		[ 200, [ 'Content-Type' => 'text/plain' ], [ $ret->() ] ];
 	},
 	'/config.cgi' => sub {
 		my ($self, $env) = @_;
 		my $ret = 'SUCCESS';
 		my $req = Plack::Request->new($env);
 		my $op  = $req->param('MASTERCODE');
-		[ 400, [ 'Content-Type' => 'text/plain' ], [ $ret ] ];
+		[ 200, [ 'Content-Type' => 'text/plain' ], [ $ret ] ];
 	},
 };
 

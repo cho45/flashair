@@ -5,26 +5,6 @@
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 		<script type="text/javascript" src="lib.js"></script>
-	</head>
-	<body>
-		<header>
-			<a href="/">Recent Photo</a>
-		</header>
-		<div id="list">
-			<script type="text/html" id="listTmpl">
-				<a class="file <%= obj.ext %>" href="<%= obj.path %>">
-					<!--
-					<%= [obj.date.getFullYear(), obj.date.getMonth() + 1, obj.date.getDate()].join('/') %>
-					<%= [obj.date.getHours(), obj.date.getMinutes(), obj.date.getSeconds()].join(':') %>
-					-->
-					<% if (obj.ext == 'JPG') { %>
-					<img src="/thumbnail.cgi?<%= obj.path %>" class="thumbnail"/>
-					<% } else { %>
-					<span class="filename"><%= obj.filename %></span>
-					<% } %>
-				</a>
-			</script>
-		</div>
 
 		<style>
 			html, body {
@@ -32,7 +12,7 @@
 				margin: 0;
 				padding: 0 0 20px 0;
 				background: #fff;
-				color: #333;
+				color: #444;
 			}
 
 			header {
@@ -41,6 +21,12 @@
 				border-width: 0 0 1px 0;
 				border-style: solid;
 				border-color: #d8d8d8;
+				font-weight: bold;
+			}
+
+			header a {
+				display: block;
+				margin: 0 auto;
 			}
 
 			#list {
@@ -78,6 +64,7 @@
 				vertical-align: middle;
 				margin: 0;
 				padding: 0;
+				background: #f1f1f1 url('/SD_WLAN/file.jpg') no-repeat 50% 50%;
 			}
 
 			.file .filename {
@@ -85,11 +72,109 @@
 			}
 		</style>
 
+	</head>
+	<body>
+		<header>
+			<a href="/">Recent Photo</a>
+		</header>
+		<div id="list">
+			<script type="text/html" id="listTmpl">
+				<a class="file <%= obj.ext %>" href="<%= obj.path %>">
+					<!--
+					<%= [obj.date.getFullYear(), obj.date.getMonth() + 1, obj.date.getDate()].join('/') %>
+					<%= [obj.date.getHours(), obj.date.getMinutes(), obj.date.getSeconds()].join(':') %>
+					-->
+					<% if (obj.ext == 'JPG') { %>
+					<img src="data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw%3D%3D" data-path="<%= obj.path %>" class="thumbnail"/>
+					<% } else { %>
+					<span class="filename"><%= obj.filename %></span>
+					<% } %>
+				</a>
+			</script>
+		</div>
+
 		<script>
 			Deferred.define();
 
 			var FlashAir = {};
 			FlashAir.API = {
+				isConnected : function () {
+					var d = new Deferred();
+					$.ajax({
+						url: '/command.cgi?op=101',
+						type : "GET",
+						timeout: 10 * 1000,
+						dataType: 'text',
+						success : function (data, status, xhr) {
+							d.call(true);
+						},
+						error : function (jqXHR, status, error) {
+							d.call(false);
+						}
+					});
+					return d;
+				},
+
+				waitUntilConnect : function () {
+					return next(function () {
+						return FlashAir.API.isConnected().next(function (connected) {
+							if (!connected) {
+								return wait(3).next(FlashAir.API.waitUntilConnect);
+							}
+						});
+					});
+				},
+
+				waitUntilConnectToInternet : function () {
+					return next(function () {
+						var d = new Deferred();
+						var img = new Image();
+						var timer;
+						img.onload = function () {
+							clearInterval(timer);
+							d.call();
+						};
+						img.onerror = function () {
+							clearInterval(timer);
+							d.fail('not connected; onerror');
+						};
+						timer = setInterval(function () {
+							img.onload = null;
+							img.onerror = null;
+							delete img;
+							d.fail('not connected; timeout');
+						}, 10 * 1000);
+						img.src = "http://www.google.com/textinputassistant/tia.png?" + new Date().getTime();
+						return d;
+					}).
+					error(function (e) {
+						console.log(e);
+						if (e.match(/not connected/)) {
+							return wait(3).next(FlashAir.API.waitUntilConnectToInternet);
+						} else {
+							throw e;
+						}
+					});
+				},
+
+				loadAsBinary : function (path) {
+					var d = new Deferred();
+					$.ajax({
+						url: "path",
+						type : "GET",
+						dataType: 'text',
+						beforeSend: function ( xhr ) {
+							xhr.overrideMimeType("text/plain; charset=x-user-defined");
+						},
+						success : function (data, status, xhr) {
+							d.call(data.replace(/./g, function (_) {
+								return _.charCodeAt(0) & 0xff;
+							}));
+						},
+					});
+					return d;
+				},
+
 				getFiles : function (path) {
 					// console.log(['getFiles', path]);
 					var d = new Deferred();
@@ -148,45 +233,42 @@
 					});
 				},
 
-				getThumbnailURL : function (path) {
-					if (navigator.userAgent.match(/Android 2.[123]/)) return next(function () { return '/thumbnail.cgi?' + path });
-
+				// require lscache
+				getThumbnailURL : function (path, size) {
 					var d = new Deferred();
 
-					var cache = localStorage.getItem('thumbnail:' + path);
+					var cache = lscache.get('thumbnail:' + path);
 					if (!cache) {
 						console.log(['create thumbnail', path]);
+
 						var img = new Image();
 						img.onload = function () {
-							var size = 100;
-
-							var canvas = document.createElement('canvas');
-							canvas.setAttribute('width', size);
-							canvas.setAttribute('height', size);
-
-							var ctx = canvas.getContext('2d');
-							var source = Math.min(img.height, img.width) - 80;
-							ctx.drawImage(img,
-								(img.width  - source) / 2,
-								(img.height - source) / 2,
-								source,
-								source,
-								0,
-								0,
-								size,
-								size
-							);
-							var url = canvas.toDataURL('image/jpeg', 0.8);
 							try {
-								localStorage.setItem('thumbnail:' + path, url);
-							} catch (e) {
-								localStorage.clear();
-							}
-							d.call(url);
+								var canvas = document.createElement('canvas');
+								canvas.setAttribute('width', size);
+								canvas.setAttribute('height', size);
+
+								var ctx = canvas.getContext('2d');
+								var source = Math.min(img.height, img.width) * 0.7;
+								ctx.drawImage(img,
+									(img.width  - source) / 2,
+									(img.height - source) / 2,
+									source,
+									source,
+									0,
+									0,
+									size,
+									size
+								);
+								var url = canvas.toDataURL('image/jpeg', 0.8);
+								console.log(['cached thumbnail/size:', url.length ]);
+								lscache.set('thumbnail:' + path, url);
+								d.call(url);
+							} catch (e) { d.fail(e) }
 						};
 						img.src = '/thumbnail.cgi?' + path;
 					} else {
-						console.log(['cached thumbnail', path]);
+						console.log(['cached thumbnail:', path]);
 						setTimeout(function () { d.call(cache) }, 10);
 					}
 
@@ -222,28 +304,60 @@
 				}
 			};
 
-			var list = $('#list');
-			var start = 0;
-			next(function () {
-				// console.log(['getRecent', start, start + 1]);
-				// thumbnail.cgi は同時アクセスすると刺さる
-				return FlashAir.API.getRecent(start, start + 1).
-					next(function (files) {
-						start = start + files.length;
-						if (!files.length) throw "done";
 
-						var it = files[0];
-						var box = $(window.tmpl('listTmpl')(it));
-						list.append(box);
-						var d = new Deferred();
-						box.find('img.thumbnail').load(function () {
-							d.call();
+			// Recent Photo
+
+			function loadThumbnailImage (parent) {
+				if (!loadThumbnailImage.queue) loadThumbnailImage.queue = [];
+				var queue = loadThumbnailImage.queue;
+
+				parent.find('img.thumbnail[data-path]').each(function () {
+					load(this);
+				});
+
+				function load (target) {
+					queue.push(target);
+					if (!queue.worker) {
+						queue.worker = next(function work () {
+							var target = queue.shift();
+							var path   = target.getAttribute('data-path');
+							return FlashAir.API.getThumbnailURL(path, 100).next(function (url) {
+								target.src = url;
+
+								if (queue.length) {
+									return next(work);
+								} else {
+									delete queue.worker;
+								}
+							});
+						}).
+						error(function (e) {
+							alert(e);
 						});
-						return d;
+					}
+				}
+			}
+
+			if (location.hash == '#nocache') lscache.flush();
+
+			var list = $('#list');
+			var start = 0, limit = 1;
+			next(function () {
+				console.log(['getRecent', start, limit ]);
+				return FlashAir.API.getRecent(start, start + limit).
+					next(function (files) {
+						if (!files.length) throw "done";
+						start = start + files.length; if (limit < 32) limit = limit * 2;
+
+						for (var i = 0, it; (it = files[i]); i++) {
+							var box = $(window.tmpl('listTmpl')(it));
+							loadThumbnailImage(box);
+							list.append(box);
+						}
 					}).
 					next(function () {
 						var loadNext;
-						if (start < 32) {
+						if ($(document.body).height() < $(window).height()) {
 							loadNext = next();
 						} else {
 							// scroll event...
@@ -270,6 +384,7 @@
 				var itemWidth = 100 + padding;
 				var row = Math.floor( ($(window).width() - padding) / itemWidth );
 				list.width(row * itemWidth);
+				$('header a').width(row * itemWidth);
 			}).resize();
 
 			// Simple JavaScript Templating
@@ -305,7 +420,4 @@
 			}
 		</script>
 	</body>
-	<!--
-	最近の画像を表示
-	-->
 </html>

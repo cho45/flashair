@@ -53,3 +53,13 @@ FlashAir の HTTPD のエミュレータ
 
 FAT 関係は http://www.geocities.co.jp/SiliconValley-PaloAlto/2038/fat.html をみたらわかる
 
+
+## Copyright
+
+lib.js is made from:
+
+ * [jQuery]( http://jquery.com/ ) MIT License
+ * [JSDeferred]( http://cho45.stfuawsc.com/jsdeferred/ ) MIT License
+ * [lscache]( https://github.com/pamelafox/lscache ) Apache License
+ * [JavaScript JPEG Encoder]( http://www.bytestrom.eu/blog/2009/1120a_jpeg_encoder_for_javascript ) MIT License
+

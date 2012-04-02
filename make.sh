@@ -1,3 +1,10 @@
 #!/bin/sh
 
-cat ./jquery-1.7.2.min.js ./jsdeferred.jquery.js > ./lib.js
+cat \
+	./lib/jquery-1.7.2.min.js \
+	./lib/jsdeferred.jquery.js \
+	./lib/lscache.js \
+	./lib/jpeg_encoder_basic.js \
+	./lib/jpeg_encoder_basic_todataurl.js \
+	> ./lib.js
+
