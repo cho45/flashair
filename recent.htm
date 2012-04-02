@@ -34,6 +34,12 @@
 				margin: 0 auto;
 			}
 
+			#list::after {
+				display: block
+				clear: both;
+				content: " ";
+			}
+
 			a:link ,
 			a:visited {
 				color: #333;
@@ -69,6 +75,11 @@
 
 			.file .filename {
 				display: inline-block;
+			}
+
+			footer {
+				display: block;
+				clear: both;
 			}
 		</style>
 
@@ -347,7 +358,7 @@
 				return FlashAir.API.getRecent(start, start + limit).
 					next(function (files) {
 						if (!files.length) throw "done";
-						start = start + files.length; if (limit < 32) limit = limit * 2;
+						start = start + files.length; if (limit < 32) limit = limit * 2 + limit;
 
 						for (var i = 0, it; (it = files[i]); i++) {
 							var box = $(window.tmpl('listTmpl')(it));
@@ -357,14 +368,14 @@
 					}).
 					next(function () {
 						var loadNext;
-						if ($(document.body).height() < $(window).height()) {
+						if ($(document).height() <= $(window).height() * 1.5) {
 							loadNext = next();
 						} else {
 							// scroll event...
 							loadNext = new Deferred();
 							$(window).scroll(function () {
 								var rest = $(document).height() - $(window).scrollTop();
-								if (rest < $(window).height()) {
+								if (rest < $(window).height() * 1.5) {
 									$(window).unbind('scroll', arguments.callee);
 									loadNext.call();
 								}
