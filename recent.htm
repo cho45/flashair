@@ -194,10 +194,12 @@
 						type : "GET",
 						dataType: 'text',
 						success : function (data, status, xhr) {
-							var js = data.match(/wlansd\[\d+\]=.+/g);
-							var files = new Function("wlansd", js.join("\n") + "return wlansd")([]);
-							for (var i = 0, it; (it = files[i]); i++) files[i] = new FlashAir.File(it);
-							d.call(files);
+							try {
+								var js = data.match(/wlansd\[\d+\]=.+/g);
+								var files = new Function("wlansd", js.join("\n") + "return wlansd")([]);
+								for (var i = 0, it; (it = files[i]); i++) files[i] = new FlashAir.File(it);
+								d.call(files);
+							} catch (e) { d.fail(e) }
 						},
 						error : function (jqXHR, status, error) {
 							d.fail([jqXHR, status, error]);
