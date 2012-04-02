@@ -247,6 +247,7 @@
 				// require lscache
 				getThumbnailURL : function (path, size) {
 					var d = new Deferred();
+					size = size * (window.devicePixelRatio || 1);
 
 					var cache = lscache.get('thumbnail:' + path);
 					if (!cache) {
