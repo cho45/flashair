@@ -6,7 +6,14 @@ My FlashAir files
  *  recent.htm
  *  lib.js
 
-SDカードのルートディレクトリなど、適当なところにコピーする
+SDカードのルートディレクトリなど、適当なところにコピーする。Android, iPhone などでいい感じになるように調整済み
+
+
+iPhone
+<img src="https://lh5.googleusercontent.com/-Z3qgu5W8Q8M/T3nKmeRyuvI/AAAAAAAABzk/5PW2IYXNY4c/s512/2012-04-03%252000.49.08.png"/>
+
+iPad
+<img src="https://lh4.googleusercontent.com/-JujV74pEGMM/T3nOyEHySBI/AAAAAAAABz8/5rpJsnMUbAE/s640/2012-04-03-01.05.02.png"/>
 
 
 ## FlashAir エミュレータ

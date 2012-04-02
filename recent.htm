@@ -310,8 +310,8 @@
 
 					this.isDirectory    = this.attribute & 0x08 != 0;
 					this.isFile         = !this.isDirectory;
-					this.isDCFDirectory = new RegExp('^/DCIM/[0-9]{3}[A-Z]+$').test(this.path);
-					this.isDCFBasicFile = new RegExp('^/DCIM/[0-9]{3}[A-Z_]+/[A-Z_]{4}[0-9]{4}.JPG$').test(this.path);
+					this.isDCFDirectory = new RegExp('^/DCIM/[0-9]{3}[A-Z]+$', 'i').test(this.path);
+					this.isDCFBasicFile = new RegExp('^/DCIM/[0-9]{3}[A-Z_]+/[A-Z_]{4}[0-9]{4}.JPG$', 'i').test(this.path);
 				}
 			};
 
