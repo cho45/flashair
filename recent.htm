@@ -195,7 +195,7 @@
 						dataType: 'text',
 						success : function (data, status, xhr) {
 							try {
-								var js = data.match(/wlansd\[\d+\]=.+/g);
+								var js = data.match(/wlansd\[\d+\]=.+/g) || [];
 								var files = new Function("wlansd", js.join("\n") + "return wlansd")([]);
 								for (var i = 0, it; (it = files[i]); i++) files[i] = new FlashAir.File(it);
 								d.call(files);
