@@ -40,6 +40,15 @@
 				content: " ";
 			}
 
+			.loading {
+				clear: both;
+				font-weight: bold;
+				color: #666;
+				text-align: center;
+				margin: 0;
+				padding: 10px;
+			}
+
 			a:link ,
 			a:visited {
 				color: #333;
@@ -103,6 +112,8 @@
 				</a>
 			</script>
 		</div>
+
+		<p class="loading">Loading...</p>
 
 		<script>
 			Deferred.define();
@@ -370,11 +381,14 @@
 					var limits = [1, 3, self.row % 4 || self.row];
 
 					var list = $('#list');
+					var loading = $('.loading');
 					var start = 0, limit = 1;
 					next(function () {
 						console.log(['getRecent', start, limit ]);
+						loading.show();
 						return FlashAir.API.getRecent(start, start + limit).
 							next(function (files) {
+								loading.hide();
 								if (!files.length) throw "done";
 								start = start + files.length;
 
