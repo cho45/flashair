@@ -233,7 +233,7 @@
 								files.sort(function (a, b) { return a.date.getTime() - b.date.getTime() });
 								var directories = [];
 								for (var i = 0, it; (it = files[i]); i++) {
-									if (it.isDCFDirectory) directories.push(it);
+									if (it.isDCFDirectory && it.filename != '100__TSB') directories.push(it);
 								}
 								cache.directories = directories;
 								return directories;
