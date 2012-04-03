@@ -41,6 +41,7 @@
 			}
 
 			.loading {
+				font-size: 12px;
 				clear: both;
 				font-weight: bold;
 				color: #666;
@@ -388,7 +389,6 @@
 						loading.show();
 						return FlashAir.API.getRecent(start, start + limit).
 							next(function (files) {
-								loading.hide();
 								if (!files.length) throw "done";
 								start = start + files.length;
 
@@ -429,6 +429,7 @@
 					}).
 					error(function (e) {
 						if (e == 'done') return;
+						loading.hide();
 						alert(e);
 					});
 				},
