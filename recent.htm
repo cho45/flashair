@@ -399,7 +399,7 @@
 									loadNext = next();
 								} else {
 									// scroll event...
-									limit = self.row;
+									limit = self.row * 2;
 									loadNext = new Deferred();
 									$(window).scroll(function () {
 										var rest = $(document).height() - $(window).scrollTop();
