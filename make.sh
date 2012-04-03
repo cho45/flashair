@@ -6,5 +6,6 @@ cat \
 	./lib/lscache.js \
 	./lib/jpeg_encoder_basic.js \
 	./lib/jpeg_encoder_basic_todataurl.js \
+	./lib/tmpl.js \
 	> ./lib.js
 
