@@ -429,8 +429,10 @@
 					}).
 					error(function (e) {
 						if (e == 'done') return;
-						loading.hide();
 						alert(e);
+					}).
+					next(function () {
+						loading.hide();
 					});
 				},
 
