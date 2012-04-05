@@ -275,7 +275,7 @@
 							queue.worker = next(function () {
 								return next(function () {
 									var job  = queue.shift();
-									if (!job) return delete queue.worker;
+									if (!job) throw "done";
 									var path = job.path;
 									var size = job.size;
 									var ret  = new Deferred();
@@ -313,6 +313,7 @@
 								next(arguments.callee);
 							}).
 							error(function (e) {
+								if (e === 'done') return delete queue.worker;
 								alert(e);
 							});
 						}
