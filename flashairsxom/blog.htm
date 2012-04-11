@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>FlashAirsxom</title>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<script type="text/javascript" src="lib.js"></script>
+		<script type="text/javascript" src="showdown.js"></script>
+		<script type="text/javascript" src="hash.js"></script>
+
+		<style>
+			html, body {
+				font-family: sans-serif;
+				margin: 0;
+				padding: 0 0 20px 0;
+				background: #fff;
+				color: #444;
+				text-align: justify;
+			}
+
+			a:link,
+			a:visited {
+				color: #006699;
+				text-decoration: none;
+			}
+
+			#top {
+				padding: 10px;
+				background: #f1f1f1;
+				border-width: 0 0 1px 0;
+				border-style: solid;
+				border-color: #d8d8d8;
+				font-weight: bold;
+			}
+
+			#top a {
+				display: block;
+				margin: 0 auto;
+			}
+
+			#entries {
+				padding: 20px 10px 20px 10px;
+				margin: 0 auto;
+			}
+
+			article {
+				margin: 0 0 50px 0;
+			}
+
+			article header {
+			}
+
+			article header .date {
+				font-weight: bold;
+				font-size: 90%;
+				color: #888;
+			}
+
+			article header h1 {
+				font-size: 120%;
+				font-weight: bold;
+				margin: 0;
+				padding: 0;
+			}
+
+			article h2 {
+				font-size: 100%;
+				font-weight: bold;
+				margin: 20px 0;
+			}
+
+			footer {
+				display: block;
+				clear: both;
+			}
+
+
+			a.pager {
+				display: block;
+				text-align: center;
+				margin: 5px;
+				background: #f1f1f1;
+				padding: 10px;
+				font-weight: bold;
+			}
+
+		</style>
+
+	</head>
+	<body>
+		<header id="top">
+			<a href="">FlashAirsxom</a>
+		</header>
+		<div id="entries" class="hfeed">
+			<script type="text/html" id="entryTmpl">
+				<article class="hentry">
+					<header>
+						<span class="date">
+							<%= [
+									date.getFullYear(),
+									String(100 + date.getMonth() + 1).slice(1),
+									String(100 + date.getDate()).slice(1) 
+								].join('-')
+							%>
+						</span>
+						<h1><a href="<%= link %>"><%= title %></a></h1>
+					</header>
+					<%== body_html %>
+				</article>
+			</script>
+		</div>
+
+		<a class="pager">Next page →</a>
+
+		<script type="text/javascript" src="blog.js"></script>
+	</body>
+</html>
+
