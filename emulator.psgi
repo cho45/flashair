@@ -133,7 +133,8 @@ sub fat_children {
 		my ($name, $ext) = split /\./, $_->basename;
 		if (length $name > 8) {
 			$name = substr($name, 0, 6);
-			$name .= '~' . ++$names->{$name};
+			$ext  ||= '';
+			$name .= '~' . ++$names->{"$name.$ext"};
 		}
 
 		$_->{fat_name} = $ext ? "$name.$ext" : $name;
