@@ -84,6 +84,70 @@ sub should_handle {
 	return -d $file || -f $file;
 }
 
+sub locate_file {
+	my ($self, $env) = @_;
+	no warnings 'redefine';
+	local *File::Spec::Unix::catfile = sub {
+		my $class = shift;
+		$self->fat_to_real(join('/', @_));
+	};
+	$self->SUPER::locate_file($env);
+}
+
+sub fat_to_real {
+	my ($self, $path) = @_;
+	return $path unless $path =~ /~/;
+
+	my @path = split '/', $path;
+	for (my $i = 0; $i < @path; $i++) {
+		next unless $path[$i] =~ /~\d/;
+		my $parent = join('/', @path[0..($i-1)]);
+		my ($file) = grep { $path[$i] eq $_->{fat_name} } $self->fat_children($parent);
+		$path[$i] = $file->basename;
+	}
+	join('/', @path);
+}
+
+sub real_to_fat {
+	my ($self, $path) = @_;
+	my @path = split '/', $path;
+	for (my $i = @path - 1; $i >= 0; $i--) {
+		my $parent = join('/', @path[0..($i-1)]);
+		my ($name, $ext) = split /\./, $path[$i];
+		if (length $name > 8) {
+			my ($file) = grep { $path[$i] eq $_->basename } $self->fat_children($parent);
+			$path[$i] = $file->{fat_name};
+		}
+	}
+	join('/', @path);
+}
+
+sub fat_children {
+	my ($self, $dir) = @_;
+	my $names = {};
+
+	map {
+		my $t = Time::Piece->new($_->stat->ctime);
+
+		# FAT short name
+		my ($name, $ext) = split /\./, $_->basename;
+		if (length $name > 8) {
+			$name = substr($name, 0, 6);
+			$name .= '~' . ++$names->{$name};
+		}
+
+		$_->{fat_name} = $ext ? "$name.$ext" : $name;
+
+		# FAT format
+		$_->{fat_attribute} = 0 | ($_->is_dir ? DIRECTORY : 0);
+		$_->{fat_date} = (($t->year - 1980) << 9) | ($t->mon << 5) | $t->mday;
+		$_->{fat_time} = ($t->hour << 11) | ($t->min << 5) | floor($t->second / 2);
+
+		$_;
+	}
+	Path::Class::Dir->new($dir)->children
+}
+
 sub serve_path {
 	my ($self, $env, $file) = @_;
 	-f $file and return $self->SUPER::serve_path($env, $file);
@@ -95,18 +159,11 @@ sub serve_path {
 
 	my $js = "";
 	my $i = 0;
-	for my $child (Path::Class::Dir->new($file)->children) {
-		my $dir = "/" . $child->parent->relative($self->root);
+	for my $child ($self->fat_children($file)) {
+		my $dir = "/" . Path::Class::Dir->new($self->real_to_fat($child->parent))->relative($self->real_to_fat($self->root));
 		$dir = "" if $dir eq "/.";
 
-		my $t = Time::Piece->new($child->stat->ctime);
-
-		# FAT format
-		my $attribute = 0 | ($child->is_dir ? DIRECTORY : 0);
-		my $date = (($t->year - 1980) << 9) | ($t->mon << 5) | $t->mday;
-		my $time = ($t->hour << 11) | ($t->min << 5) | floor($t->second / 2);
-
-		$js .= sprintf('wlansd[%d]="%s";', $i++, join(',', $dir, $child->basename, $child->stat->size, $attribute, $date, $time)) . "\n";
+		$js .= sprintf('wlansd[%d]="%s";', $i++, join(',', $dir, $child->{fat_name}, $child->stat->size, $child->{fat_attribute}, $child->{fat_date}, $child->{fat_time})) . "\n";
 	}
 
 	my $html = Path::Class::Dir->new($self->root)->file('SD_WLAN/List.htm')->slurp;
