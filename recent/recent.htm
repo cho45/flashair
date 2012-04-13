@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Recent Photos</title>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<script type="text/javascript" src="../lib/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" src="../lib/jsdeferred.jquery.js"></script>
+		<script type="text/javascript" src="../lib/lscache.js"></script>
+		<script type="text/javascript" src="../lib/jpeg_encoder_basic.js"></script>
+		<script type="text/javascript" src="../lib/jpeg_encoder_basic_todataurl.js"></script>
+		<script type="text/javascript" src="../lib/tmpl.js"></script>
+
+		<style>
+			html, body {
+				font-family: sans-serif;
+				margin: 0;
+				padding: 0 0 20px 0;
+				background: #fff;
+				color: #444;
+			}
+
+			header {
+				padding: 10px;
+				background: #f1f1f1;
+				border-width: 0 0 1px 0;
+				border-style: solid;
+				border-color: #d8d8d8;
+				font-weight: bold;
+			}
+
+			header a {
+				display: block;
+				margin: 0 auto;
+			}
+
+			#list {
+				padding: 20px 0 20px 5px;
+				margin: 0 auto;
+			}
+
+			#list::after {
+				display: block
+				clear: both;
+				content: " ";
+			}
+
+			.loading {
+				font-size: 12px;
+				clear: both;
+				font-weight: bold;
+				color: #666;
+				text-align: center;
+				margin: 0;
+				padding: 10px;
+			}
+
+			a:link ,
+			a:visited {
+				color: #333;
+				text-decoration: none;
+			}
+
+			.file {
+				display: inline-block;
+				width: 100px;
+				height: 100px;
+				margin: 0 5px 5px 0;
+				padding: 0;
+				float: left;
+			}
+
+			.file.jpg {
+				border: 1px solid #fff;
+			}
+
+			.file .filename ,
+			.file .thumbnail {
+				max-width: 100%;
+				min-width: 100%;
+				max-height: 100%;
+				min-height: 100%;
+				line-height: 100px;
+				text-align: center;
+				vertical-align: middle;
+				margin: 0;
+				padding: 0;
+				background: #f1f1f1 url('/SD_WLAN/file.jpg') no-repeat 50% 50%;
+			}
+
+			.file .filename {
+				display: inline-block;
+			}
+
+			footer {
+				display: block;
+				clear: both;
+			}
+		</style>
+
+	</head>
+	<body>
+		<header>
+			<a href="/" class="ui-just">Recent Photos</a>
+		</header>
+		<div id="list" class="ui-just">
+			<script type="text/html" id="listTmpl">
+				<a class="file <%= obj.ext %>" href="<%= obj.path %>" download>
+					<!--
+					<%= [obj.date.getFullYear(), obj.date.getMonth() + 1, obj.date.getDate()].join('/') %>
+					<%= [obj.date.getHours(), obj.date.getMinutes(), obj.date.getSeconds()].join(':') %>
+					-->
+					<% if (obj.ext == 'JPG') { %>
+					<img src="data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw%3D%3D" data-path="<%= obj.path %>" class="thumbnail"/>
+					<% } else { %>
+					<span class="filename"><%= obj.filename %></span>
+					<% } %>
+				</a>
+			</script>
+		</div>
+
+		<p class="loading">Loading...</p>
+
+		<script type="text/javascript" src="../flashair.js"></script>
+		<script type="text/javascript" src="recent.js"></script>
+	</body>
+</html>

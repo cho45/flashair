@@ -4,7 +4,6 @@ My FlashAir files
 ## 最新の画像を表示
 
  *  recent.htm
- *  lib.js
 
 SDカードのルートディレクトリなど、適当なところにコピーする。Android, iPhone などでいい感じになるように調整済み
 
@@ -16,6 +15,13 @@ iPhone:
 iPad:
 
 <img src="https://lh4.googleusercontent.com/-JujV74pEGMM/T3nOyEHySBI/AAAAAAAABz8/5rpJsnMUbAE/s640/2012-04-03-01.05.02.png"/>
+
+
+## Markdown で書かれた .txt をブログっぽく見せるやつ
+
+  * blog.htm
+
+  SDカードのルートディレクトリなど、適当なところにコピーする。/blog 以下に .txt を置く。
 
 
 ## FlashAir エミュレータ
@@ -64,8 +70,6 @@ FlashAir の HTTPD のエミュレータ
 
 
 ## Copyright
-
-lib.js is made from:
 
  * [jQuery]( http://jquery.com/ ) MIT License
  * [JSDeferred]( http://cho45.stfuawsc.com/jsdeferred/ ) MIT License

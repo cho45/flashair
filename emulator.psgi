@@ -6,6 +6,7 @@ use warnings;
 use parent qw(Plack::App::File);
 use Plack::Request;
 use Path::Class::Dir;
+use Path::Class::File;
 use Time::Piece;
 use Image::ExifTool qw(:Public);
 use POSIX qw(floor);
