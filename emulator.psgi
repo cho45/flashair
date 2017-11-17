@@ -38,6 +38,7 @@ my $CGI = {
 		my $req = Plack::Request->new($env);
 		my $op  = $req->param('op');
 
+		# https://flashair-developers.com/ja/documents/api/commandcgi/
 		$ret = {
 			# File list
 			100 => sub {
@@ -45,9 +46,9 @@ my $CGI = {
 				",DCIM,0,16,16508,2777\n" .
 				",SD_WLAN,0,18,16508,2660"
 			},
-			# Unknown
-			101 => sub { '2' },
-			# Unknown
+			# File count
+			101 => sub { '3' },
+			# Update info
 			102 => sub { '1' },
 			# Unknown
 			103 => sub { '1607beb4bb14c1a20388020019dd5b' },
@@ -61,7 +62,27 @@ my $CGI = {
 			107 => sub { 'Accept-Language: ja,en-US;q=0.8,en;q=0.6' },
 			# Version
 			108 => sub { 'F24A6W3AW1.00.01' },
-		}->{$op};
+			#
+			109 => sub { '/DCIM/100__TSB/FA000001.JPG' },
+			#
+			110 => sub { '4' },
+			#
+			111 => sub { '300000' },
+			#
+			117 => sub { '0123ABCD4567EFGH' },
+			#
+			118 => sub { '1' },
+			#
+			120 => sub { '02544d535730384708c00b78700d201' },
+			#
+			121 => sub { '174428' },
+			#
+			130 => sub { '' },
+			#
+			131 => sub { 'SUCCESS' },
+			#
+			140 => sub { '13952920/15228928,512' },
+		}->{$op} || sub { 'unsupported' };
 
 		[ 200, [ 'Content-Type' => 'text/plain' ], [ $ret->() ] ];
 	},
