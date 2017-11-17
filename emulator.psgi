@@ -93,6 +93,13 @@ my $CGI = {
 		my $op  = $req->param('MASTERCODE');
 		[ 200, [ 'Content-Type' => 'text/plain' ], [ $ret ] ];
 	},
+	'/upload.cgi' => sub {
+		my ($self, $env) = @_;
+		my $ret = 'SUCCESS';
+		my $req = Plack::Request->new($env);
+		sleep 3;
+		[ 200, [ 'Content-Type' => 'text/plain' ], [ $ret ] ];
+	},
 };
 
 sub call {

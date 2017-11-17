@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Upload</title>
+	</head>
+
+	<body>
+		<form action="/upload.cgi" method="post" enctype="multipart/form-data">
+			<input type="hidden" name="UPDIR" value="/">
+			<input type="file" name="file" id="file">
+			<div id="status"></div>
+		</form>
+		<script src="upload.js"></script>
+	</body>
+</html>
